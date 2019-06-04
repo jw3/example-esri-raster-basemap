@@ -23,11 +23,24 @@ class MainActivity : AppCompatActivity() {
             .map { Raster(it) }
             .map { RasterLayer(it) }
 
-        mapView.map = ArcGISMap(Basemap(layers, emptyList()))
+
+        mapView.map = basemapFromStorage()?.let { ArcGISMap(it) } ?: ArcGISMap(Basemap.Type.IMAGERY, 42.0, 42.0, 18)
 
         mapView.map.addDoneLoadingListener {
             println(mapView.map.spatialReference.wkid)
             println(mapView.map.spatialReference.unit.name)
+        }
+    }
+
+    companion object {
+        fun basemapFromStorage(): Basemap? {
+            val layers = Environment.getExternalStorageDirectory().list()
+                .filter { it.endsWith(".tif") }
+                .map { Paths.get(Environment.getExternalStorageDirectory().path, it).toString() }
+                .map { Raster(it) }
+                .map { RasterLayer(it) }
+
+            return if (layers.isNotEmpty()) Basemap(layers, emptyList()) else null
         }
     }
 }
